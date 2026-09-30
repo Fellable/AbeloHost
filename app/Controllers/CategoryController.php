@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Repositories\CategoryRepository;
 use App\Repositories\PostRepository;
+use App\Support\Paginator;
 use App\View\SmartyView;
 
 /**
@@ -13,6 +14,8 @@ use App\View\SmartyView;
  */
 final class CategoryController
 {
+    private const POSTS_PER_PAGE = 3;
+
     /**
      * @param CategoryRepository $categoryRepository Репозиторий категорий
      * @param PostRepository $postRepository Репозиторий статей
@@ -30,9 +33,10 @@ final class CategoryController
      *
      * @param string $slug Slug категории
      * @param string $sort Вариант сортировки статей
+     * @param int $page Номер страницы
      * @return string HTML страницы категории
      */
-    public function show(string $slug, string $sort = 'date'): string
+    public function show(string $slug, string $sort = 'date', int $page = 1): string
     {
         $category = $this->categoryRepository->findBySlug($slug);
 
@@ -43,7 +47,15 @@ final class CategoryController
         }
 
         $sort = $this->postRepository->normalizeSort($sort);
-        $posts = $this->postRepository->findByCategoryId($category['id'], $sort);
+        $totalPosts = $this->postRepository->countByCategoryId($category['id']);
+        $paginator = new Paginator($page, $totalPosts, self::POSTS_PER_PAGE);
+        $offset = ($paginator->currentPage - 1) * $paginator->perPage;
+        $posts = $this->postRepository->findByCategoryId(
+            $category['id'],
+            $sort,
+            $paginator->perPage,
+            $offset,
+        );
 
         return $this->view->render(
             'category.tpl',
@@ -51,6 +63,7 @@ final class CategoryController
                 'category' => $category,
                 'posts' => $posts,
                 'sort' => $sort,
+                'paginator' => $paginator,
             ],
         );
     }

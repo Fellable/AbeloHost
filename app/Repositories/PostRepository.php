@@ -36,14 +36,38 @@ final class PostRepository
     }
 
     /**
+     * Возвращает количество статей категории
+     *
+     * @param int $categoryId Идентификатор категории
+     * @return int Количество статей
+     */
+    public function countByCategoryId(int $categoryId): int
+    {
+        $statement = $this->connection->prepare(
+            'SELECT COUNT(*)
+            FROM category_post
+            WHERE category_id = :category_id'
+        );
+        $statement->execute(['category_id' => $categoryId]);
+
+        return (int) $statement->fetchColumn();
+    }
+
+    /**
      * Возвращает статьи категории с учётом сортировки
      *
      * @param int $categoryId Идентификатор категории
      * @param string $sort Вариант сортировки
+     * @param int $limit Количество статей
+     * @param int $offset Смещение выборки
      * @return array Список статей
      */
-    public function findByCategoryId(int $categoryId, string $sort = 'date'): array
-    {
+    public function findByCategoryId(
+        int $categoryId,
+        string $sort,
+        int $limit,
+        int $offset,
+    ): array {
         $sort = $this->normalizeSort($sort);
         $orderBy = self::SORTING[$sort];
         $statement = $this->connection->prepare(
@@ -60,9 +84,13 @@ final class PostRepository
             INNER JOIN category_post ON category_post.post_id = posts.id
             INNER JOIN images ON images.id = posts.image_id
             WHERE category_post.category_id = :category_id
-            ORDER BY ' . $orderBy
+            ORDER BY ' . $orderBy . '
+            LIMIT :limit OFFSET :offset'
         );
-        $statement->execute(['category_id' => $categoryId]);
+        $statement->bindValue('category_id', $categoryId, PDO::PARAM_INT);
+        $statement->bindValue('limit', $limit, PDO::PARAM_INT);
+        $statement->bindValue('offset', $offset, PDO::PARAM_INT);
+        $statement->execute();
 
         return $statement->fetchAll();
     }

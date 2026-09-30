@@ -22,4 +22,6 @@
             {include file="partials/post-card.tpl" post=$post}
         {/foreach}
     </div>
+
+    {include file="partials/pagination.tpl"}
 {/block}

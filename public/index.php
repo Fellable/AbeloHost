@@ -20,6 +20,7 @@ $homeController = createHomeController($connection, $view);
 $categoryController = createCategoryController($connection, $view);
 [$method, $path] = resolveRequest();
 $sort = resolveSort();
+$page = resolvePage();
 
 $content = renderRoute(
     $router,
@@ -27,6 +28,7 @@ $content = renderRoute(
     $categoryController,
     $view,
     $sort,
+    $page,
     $method,
     $path,
 );
@@ -139,6 +141,22 @@ function resolveSort(): string
 }
 
 /**
+ * Определяет номер текущей страницы
+ *
+ * @return int Номер страницы
+ */
+function resolvePage(): int
+{
+    $page = $_GET['page'] ?? '1';
+
+    if (!is_string($page) || !ctype_digit($page)) {
+        return 1;
+    }
+
+    return max(1, (int) $page);
+}
+
+/**
  * Выполняет обработчик найденного маршрута
  *
  * @param Router $router Маршрутизатор HTTP-запросов
@@ -146,6 +164,7 @@ function resolveSort(): string
  * @param CategoryController $categoryController Контроллер страницы категории
  * @param SmartyView $view Сервис рендеринга шаблонов
  * @param string $sort Вариант сортировки статей
+ * @param int $page Номер страницы
  * @param string $method HTTP-метод запроса
  * @param string $path Путь запроса
  * @return string Содержимое HTTP-ответа
@@ -156,6 +175,7 @@ function renderRoute(
     CategoryController $categoryController,
     SmartyView $view,
     string $sort,
+    int $page,
     string $method,
     string $path,
 ): string {
@@ -171,7 +191,7 @@ function renderRoute(
 
     return match ($route['name']) {
         'home' => $homeController->index(),
-        'categories.show' => $categoryController->show($slug, $sort),
+        'categories.show' => $categoryController->show($slug, $sort, $page),
         'posts.show' => sprintf(
             'Статья: %s',
             htmlspecialchars($slug, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
