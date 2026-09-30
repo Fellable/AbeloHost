@@ -26,7 +26,8 @@ final class PostRepository
      */
     public function __construct(
         private readonly PDO $connection,
-    ) {
+    )
+    {
     }
 
     /**
@@ -66,7 +67,7 @@ final class PostRepository
         );
         $statement->execute(['category_id' => $categoryId]);
 
-        return (int) $statement->fetchColumn();
+        return (int)$statement->fetchColumn();
     }
 
     /**
@@ -80,12 +81,13 @@ final class PostRepository
      * @return array Список статей
      */
     public function findByCategoryId(
-        int $categoryId,
+        int    $categoryId,
         string $sort,
         string $direction,
-        int $limit,
-        int $offset,
-    ): array {
+        int    $limit,
+        int    $offset,
+    ): array
+    {
         $sort = $this->normalizeSort($sort);
         $direction = $this->normalizeDirection($direction);
         $orderBy = self::SORTING[$sort] . ' ' . self::DIRECTIONS[$direction];

@@ -16,10 +16,11 @@ final class Image
      * @param string $alt Альтернативный текст изображения
      */
     public function __construct(
-        public readonly int $id,
+        public readonly int    $id,
         public readonly string $fullPath,
         public readonly string $previewPath,
         public readonly string $alt,
-    ) {
+    )
+    {
     }
 }

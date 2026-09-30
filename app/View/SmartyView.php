@@ -26,7 +26,8 @@ final class SmartyView
         string $templateDirectory,
         string $compileDirectory,
         string $cacheDirectory,
-    ) {
+    )
+    {
         $this->smarty = new Smarty();
         $this->smarty->setTemplateDir($templateDirectory);
         $this->smarty->setCompileDir($compileDirectory);

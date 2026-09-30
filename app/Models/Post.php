@@ -23,15 +23,16 @@ final class Post
      * @param list<Category> $categories Категории, к которым относится статья
      */
     public function __construct(
-        public readonly int $id,
-        public readonly string $title,
-        public readonly string $slug,
-        public readonly string $description,
-        public readonly string $content,
-        public readonly Image $image,
-        public readonly int $views,
+        public readonly int               $id,
+        public readonly string            $title,
+        public readonly string            $slug,
+        public readonly string            $description,
+        public readonly string            $content,
+        public readonly Image             $image,
+        public readonly int               $views,
         public readonly DateTimeImmutable $publishedAt,
-        public readonly array $categories,
-    ) {
+        public readonly array             $categories,
+    )
+    {
     }
 }

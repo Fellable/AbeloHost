@@ -14,7 +14,8 @@ final class Router
      */
     public function __construct(
         private readonly array $routes,
-    ) {
+    )
+    {
     }
 
     /**

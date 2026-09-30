@@ -16,7 +16,8 @@ final class CategoryRepository
      */
     public function __construct(
         private readonly PDO $connection,
-    ) {
+    )
+    {
     }
 
     /**
@@ -99,6 +100,7 @@ final class CategoryRepository
 
         return array_values($categories);
     }
+
     /**
      * Возвращает категорию по slug
      *
@@ -117,4 +119,5 @@ final class CategoryRepository
         $category = $statement->fetch();
 
         return is_array($category) ? $category : null;
-    }}
+    }
+}

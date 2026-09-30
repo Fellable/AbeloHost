@@ -128,6 +128,7 @@ function createPostController(PDO $connection, SmartyView $view): PostController
         $view,
     );
 }
+
 /**
  * Определяет HTTP-метод и путь текущего запроса
  *
@@ -184,7 +185,7 @@ function resolvePage(): int
         return 1;
     }
 
-    return max(1, (int) $page);
+    return max(1, (int)$page);
 }
 
 /**
@@ -203,17 +204,18 @@ function resolvePage(): int
  * @return string Содержимое HTTP-ответа
  */
 function renderRoute(
-    Router $router,
-    HomeController $homeController,
+    Router             $router,
+    HomeController     $homeController,
     CategoryController $categoryController,
-    PostController $postController,
-    SmartyView $view,
-    string $sort,
-    string $direction,
-    int $page,
-    string $method,
-    string $path,
-): string {
+    PostController     $postController,
+    SmartyView         $view,
+    string             $sort,
+    string             $direction,
+    int                $page,
+    string             $method,
+    string             $path,
+): string
+{
     $route = $router->dispatch($method, $path);
 
     if ($route === null) {

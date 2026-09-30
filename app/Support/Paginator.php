@@ -23,7 +23,7 @@ final class Paginator
     {
         $this->totalItems = max(0, $totalItems);
         $this->perPage = max(1, $perPage);
-        $this->totalPages = max(1, (int) ceil($this->totalItems / $this->perPage));
+        $this->totalPages = max(1, (int)ceil($this->totalItems / $this->perPage));
         $this->currentPage = min(max(1, $currentPage), $this->totalPages);
     }
 }
