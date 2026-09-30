@@ -95,6 +95,21 @@ final class PostRepository
         return $statement->fetchAll();
     }
     /**
+     * Увеличивает количество просмотров статьи
+     *
+     * @param int $postId Идентификатор статьи
+     */
+    public function incrementViews(int $postId): void
+    {
+        $statement = $this->connection->prepare(
+            'UPDATE posts
+            SET views = views + 1
+            WHERE id = :id'
+        );
+        $statement->execute(['id' => $postId]);
+    }
+
+    /**
      * Возвращает статью по slug вместе с категориями
      *
      * @param string $slug Slug статьи

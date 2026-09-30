@@ -38,6 +38,9 @@ final class PostController
             return $this->view->render('errors/404.tpl');
         }
 
+        $this->postRepository->incrementViews($post['id']);
+        $post['views']++;
+
         return $this->view->render('post.tpl', ['post' => $post]);
     }
 }
