@@ -1,0 +1,8 @@
+{extends file="layouts/main.tpl"}
+
+{block name="title"}Страница не найдена{/block}
+
+{block name="content"}
+    <h1>Страница не найдена</h1>
+    <p>Запрошенная страница не существует</p>
+{/block}
