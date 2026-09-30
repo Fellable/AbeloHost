@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Controllers\CategoryController;
 use App\Controllers\HomeController;
 use App\Database\Connection;
 use App\Http\Router;
 use App\Repositories\CategoryRepository;
+use App\Repositories\PostRepository;
 use App\View\SmartyView;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
@@ -13,10 +15,19 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 $rootDirectory = dirname(__DIR__);
 $view = createView($rootDirectory);
 $router = createRouter($rootDirectory);
-$homeController = createHomeController($rootDirectory, $view);
+$connection = createConnection($rootDirectory);
+$homeController = createHomeController($connection, $view);
+$categoryController = createCategoryController($connection, $view);
 [$method, $path] = resolveRequest();
 
-$content = renderRoute($router, $homeController, $view, $method, $path);
+$content = renderRoute(
+    $router,
+    $homeController,
+    $categoryController,
+    $view,
+    $method,
+    $path,
+);
 
 header('Content-Type: text/html; charset=utf-8');
 
@@ -51,19 +62,47 @@ function createRouter(string $rootDirectory): Router
 }
 
 /**
- * Создаёт контроллер главной страницы с его зависимостями
+ * Создаёт подключение к базе данных
  *
  * @param string $rootDirectory Корневой каталог проекта
+ * @return PDO Подключение к базе данных
+ */
+function createConnection(string $rootDirectory): PDO
+{
+    $databaseConfig = require $rootDirectory . '/config/database.php';
+
+    return Connection::create($databaseConfig);
+}
+
+/**
+ * Создаёт контроллер главной страницы
+ *
+ * @param PDO $connection Подключение к базе данных
  * @param SmartyView $view Сервис рендеринга шаблонов
  * @return HomeController Контроллер главной страницы
  */
-function createHomeController(string $rootDirectory, SmartyView $view): HomeController
+function createHomeController(PDO $connection, SmartyView $view): HomeController
 {
-    $databaseConfig = require $rootDirectory . '/config/database.php';
-    $connection = Connection::create($databaseConfig);
-    $categoryRepository = new CategoryRepository($connection);
+    return new HomeController(
+        new CategoryRepository($connection),
+        $view,
+    );
+}
 
-    return new HomeController($categoryRepository, $view);
+/**
+ * Создаёт контроллер страницы категории
+ *
+ * @param PDO $connection Подключение к базе данных
+ * @param SmartyView $view Сервис рендеринга шаблонов
+ * @return CategoryController Контроллер страницы категории
+ */
+function createCategoryController(PDO $connection, SmartyView $view): CategoryController
+{
+    return new CategoryController(
+        new CategoryRepository($connection),
+        new PostRepository($connection),
+        $view,
+    );
 }
 
 /**
@@ -90,6 +129,7 @@ function resolveRequest(): array
  *
  * @param Router $router Маршрутизатор HTTP-запросов
  * @param HomeController $homeController Контроллер главной страницы
+ * @param CategoryController $categoryController Контроллер страницы категории
  * @param SmartyView $view Сервис рендеринга шаблонов
  * @param string $method HTTP-метод запроса
  * @param string $path Путь запроса
@@ -98,6 +138,7 @@ function resolveRequest(): array
 function renderRoute(
     Router $router,
     HomeController $homeController,
+    CategoryController $categoryController,
     SmartyView $view,
     string $method,
     string $path,
@@ -114,10 +155,7 @@ function renderRoute(
 
     return match ($route['name']) {
         'home' => $homeController->index(),
-        'categories.show' => sprintf(
-            'Категория: %s',
-            htmlspecialchars($slug, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
-        ),
+        'categories.show' => $categoryController->show($slug),
         'posts.show' => sprintf(
             'Статья: %s',
             htmlspecialchars($slug, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),

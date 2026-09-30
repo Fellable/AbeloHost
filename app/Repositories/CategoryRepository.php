@@ -99,4 +99,22 @@ final class CategoryRepository
 
         return array_values($categories);
     }
-}
+    /**
+     * Возвращает категорию по slug
+     *
+     * @param string $slug Slug категории
+     * @return array|null Категория или null
+     */
+    public function findBySlug(string $slug): ?array
+    {
+        $statement = $this->connection->prepare(
+            'SELECT id, name, slug, description
+            FROM categories
+            WHERE slug = :slug
+            LIMIT 1'
+        );
+        $statement->execute(['slug' => $slug]);
+        $category = $statement->fetch();
+
+        return is_array($category) ? $category : null;
+    }}
