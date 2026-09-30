@@ -1,0 +1,10 @@
+{
+  "name": "abelohost-blog-assets",
+  "private": true,
+  "scripts": {
+    "build:css": "sass --style=compressed --no-source-map resources/scss/app.scss public/assets/css/app.css"
+  },
+  "devDependencies": {
+    "sass": "1.105.1"
+  }
+}

@@ -4,4 +4,4 @@
 /vendor/
 
 !.gitkeep
-
+/node_modules/
