@@ -22,4 +22,15 @@
         <p>Дата публикации: {$post.published_at|escape}</p>
         <p>Просмотров: {$post.views}</p>
     </article>
+
+    {if $relatedPosts}
+        <section>
+            <h2>Похожие статьи</h2>
+            <div>
+                {foreach $relatedPosts as $relatedPost}
+                    {include file="partials/post-card.tpl" post=$relatedPost}
+                {/foreach}
+            </div>
+        </section>
+    {/if}
 {/block}

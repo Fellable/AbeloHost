@@ -94,6 +94,7 @@ final class PostRepository
 
         return $statement->fetchAll();
     }
+
     /**
      * Увеличивает количество просмотров статьи
      *
@@ -151,4 +152,40 @@ final class PostRepository
         $post['categories'] = $categoryStatement->fetchAll();
 
         return $post;
-    }}
+    }
+
+    /**
+     * Возвращает три похожие статьи
+     *
+     * @param int $postId Идентификатор текущей статьи
+     * @return array Список похожих статей
+     */
+    public function findRelated(int $postId): array
+    {
+        $statement = $this->connection->prepare(
+            'SELECT
+                posts.id,
+                posts.title,
+                posts.slug,
+                posts.description,
+                posts.views,
+                posts.published_at,
+                images.preview_path,
+                images.alt AS image_alt,
+                COUNT(*) AS shared_categories
+            FROM category_post AS current_categories
+            INNER JOIN category_post AS related_categories
+                ON related_categories.category_id = current_categories.category_id
+            INNER JOIN posts ON posts.id = related_categories.post_id
+            INNER JOIN images ON images.id = posts.image_id
+            WHERE current_categories.post_id = :post_id
+                AND related_categories.post_id != current_categories.post_id
+            GROUP BY posts.id, images.id
+            ORDER BY shared_categories DESC, posts.published_at DESC, posts.id DESC
+            LIMIT 3'
+        );
+        $statement->execute(['post_id' => $postId]);
+
+        return $statement->fetchAll();
+    }
+}
