@@ -11,7 +11,8 @@
         </h3>
         <p class="post-card__description">{$post.description|escape}</p>
         <small class="post-card__meta">
-            {$post.published_at|escape} · Просмотров: {$post.views}
+            <span>{$post.published_at|escape}</span>
+            <span>Просмотров: {$post.views}</span>
         </small>
     </div>
 </article>
