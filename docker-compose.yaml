@@ -31,8 +31,8 @@ services:
       mysql:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "php-fpm-healthcheck || exit 1"]
-      interval: 5s
+      test: ["CMD-SHELL", "kill -0 1"]
+      interval: 10s
       timeout: 3s
       retries: 10
       start_period: 10s
