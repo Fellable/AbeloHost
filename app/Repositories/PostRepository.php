@@ -94,4 +94,46 @@ final class PostRepository
 
         return $statement->fetchAll();
     }
-}
+    /**
+     * Возвращает статью по slug вместе с категориями
+     *
+     * @param string $slug Slug статьи
+     * @return array|null Статья или null
+     */
+    public function findBySlug(string $slug): ?array
+    {
+        $statement = $this->connection->prepare(
+            'SELECT
+                posts.id,
+                posts.title,
+                posts.slug,
+                posts.description,
+                posts.content,
+                posts.views,
+                posts.published_at,
+                images.full_path,
+                images.alt AS image_alt
+            FROM posts
+            INNER JOIN images ON images.id = posts.image_id
+            WHERE posts.slug = :slug
+            LIMIT 1'
+        );
+        $statement->execute(['slug' => $slug]);
+        $post = $statement->fetch();
+
+        if (!is_array($post)) {
+            return null;
+        }
+
+        $categoryStatement = $this->connection->prepare(
+            'SELECT categories.name, categories.slug
+            FROM categories
+            INNER JOIN category_post ON category_post.category_id = categories.id
+            WHERE category_post.post_id = :post_id
+            ORDER BY categories.name'
+        );
+        $categoryStatement->execute(['post_id' => $post['id']]);
+        $post['categories'] = $categoryStatement->fetchAll();
+
+        return $post;
+    }}

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Controllers\CategoryController;
 use App\Controllers\HomeController;
+use App\Controllers\PostController;
 use App\Database\Connection;
 use App\Http\Router;
 use App\Repositories\CategoryRepository;
@@ -18,6 +19,7 @@ $router = createRouter($rootDirectory);
 $connection = createConnection($rootDirectory);
 $homeController = createHomeController($connection, $view);
 $categoryController = createCategoryController($connection, $view);
+$postController = createPostController($connection, $view);
 [$method, $path] = resolveRequest();
 $sort = resolveSort();
 $page = resolvePage();
@@ -26,6 +28,7 @@ $content = renderRoute(
     $router,
     $homeController,
     $categoryController,
+    $postController,
     $view,
     $sort,
     $page,
@@ -110,6 +113,20 @@ function createCategoryController(PDO $connection, SmartyView $view): CategoryCo
 }
 
 /**
+ * Создаёт контроллер страницы статьи
+ *
+ * @param PDO $connection Подключение к базе данных
+ * @param SmartyView $view Сервис рендеринга шаблонов
+ * @return PostController Контроллер страницы статьи
+ */
+function createPostController(PDO $connection, SmartyView $view): PostController
+{
+    return new PostController(
+        new PostRepository($connection),
+        $view,
+    );
+}
+/**
  * Определяет HTTP-метод и путь текущего запроса
  *
  * @return array{string, string} HTTP-метод и путь запроса
@@ -162,6 +179,7 @@ function resolvePage(): int
  * @param Router $router Маршрутизатор HTTP-запросов
  * @param HomeController $homeController Контроллер главной страницы
  * @param CategoryController $categoryController Контроллер страницы категории
+ * @param PostController $postController Контроллер страницы статьи
  * @param SmartyView $view Сервис рендеринга шаблонов
  * @param string $sort Вариант сортировки статей
  * @param int $page Номер страницы
@@ -173,6 +191,7 @@ function renderRoute(
     Router $router,
     HomeController $homeController,
     CategoryController $categoryController,
+    PostController $postController,
     SmartyView $view,
     string $sort,
     int $page,
@@ -192,10 +211,8 @@ function renderRoute(
     return match ($route['name']) {
         'home' => $homeController->index(),
         'categories.show' => $categoryController->show($slug, $sort, $page),
-        'posts.show' => sprintf(
-            'Статья: %s',
-            htmlspecialchars($slug, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
-        ),
+        'posts.show' => $postController->show($slug),
+
         default => throw new LogicException('Для маршрута не задан обработчик'),
     };
 }
