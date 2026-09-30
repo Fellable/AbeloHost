@@ -33,10 +33,16 @@ final class CategoryController
      *
      * @param string $slug Slug категории
      * @param string $sort Вариант сортировки статей
+     * @param string $direction Направление сортировки
      * @param int $page Номер страницы
      * @return string HTML страницы категории
      */
-    public function show(string $slug, string $sort = 'date', int $page = 1): string
+    public function show(
+        string $slug,
+        string $sort = 'date',
+        string $direction = 'desc',
+        int $page = 1,
+    ): string
     {
         $category = $this->categoryRepository->findBySlug($slug);
 
@@ -47,12 +53,14 @@ final class CategoryController
         }
 
         $sort = $this->postRepository->normalizeSort($sort);
+        $direction = $this->postRepository->normalizeDirection($direction);
         $totalPosts = $this->postRepository->countByCategoryId($category['id']);
         $paginator = new Paginator($page, $totalPosts, self::POSTS_PER_PAGE);
         $offset = ($paginator->currentPage - 1) * $paginator->perPage;
         $posts = $this->postRepository->findByCategoryId(
             $category['id'],
             $sort,
+            $direction,
             $paginator->perPage,
             $offset,
         );
@@ -63,6 +71,7 @@ final class CategoryController
                 'category' => $category,
                 'posts' => $posts,
                 'sort' => $sort,
+                'direction' => $direction,
                 'paginator' => $paginator,
             ],
         );

@@ -12,8 +12,13 @@ use PDO;
 final class PostRepository
 {
     private const SORTING = [
-        'date' => 'posts.published_at DESC, posts.id DESC',
-        'views' => 'posts.views DESC, posts.id DESC',
+        'date' => 'posts.published_at',
+        'views' => 'posts.views',
+    ];
+
+    private const DIRECTIONS = [
+        'asc' => 'ASC',
+        'desc' => 'DESC',
     ];
 
     /**
@@ -33,6 +38,17 @@ final class PostRepository
     public function normalizeSort(string $sort): string
     {
         return isset(self::SORTING[$sort]) ? $sort : 'date';
+    }
+
+    /**
+     * Возвращает допустимое направление сортировки
+     *
+     * @param string $direction Запрошенное направление
+     * @return string Допустимое направление
+     */
+    public function normalizeDirection(string $direction): string
+    {
+        return isset(self::DIRECTIONS[$direction]) ? $direction : 'desc';
     }
 
     /**
@@ -58,6 +74,7 @@ final class PostRepository
      *
      * @param int $categoryId Идентификатор категории
      * @param string $sort Вариант сортировки
+     * @param string $direction Направление сортировки
      * @param int $limit Количество статей
      * @param int $offset Смещение выборки
      * @return array Список статей
@@ -65,11 +82,13 @@ final class PostRepository
     public function findByCategoryId(
         int $categoryId,
         string $sort,
+        string $direction,
         int $limit,
         int $offset,
     ): array {
         $sort = $this->normalizeSort($sort);
-        $orderBy = self::SORTING[$sort];
+        $direction = $this->normalizeDirection($direction);
+        $orderBy = self::SORTING[$sort] . ' ' . self::DIRECTIONS[$direction];
         $statement = $this->connection->prepare(
             'SELECT
                 posts.id,
@@ -84,7 +103,7 @@ final class PostRepository
             INNER JOIN category_post ON category_post.post_id = posts.id
             INNER JOIN images ON images.id = posts.image_id
             WHERE category_post.category_id = :category_id
-            ORDER BY ' . $orderBy . '
+            ORDER BY ' . $orderBy . ', posts.id ' . self::DIRECTIONS[$direction] . '
             LIMIT :limit OFFSET :offset'
         );
         $statement->bindValue('category_id', $categoryId, PDO::PARAM_INT);

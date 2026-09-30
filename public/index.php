@@ -22,6 +22,7 @@ $categoryController = createCategoryController($connection, $view);
 $postController = createPostController($connection, $view);
 [$method, $path] = resolveRequest();
 $sort = resolveSort();
+$direction = resolveDirection();
 $page = resolvePage();
 
 $content = renderRoute(
@@ -31,6 +32,7 @@ $content = renderRoute(
     $postController,
     $view,
     $sort,
+    $direction,
     $page,
     $method,
     $path,
@@ -158,6 +160,18 @@ function resolveSort(): string
 }
 
 /**
+ * Определяет направление сортировки статей
+ *
+ * @return string Запрошенное направление
+ */
+function resolveDirection(): string
+{
+    $direction = $_GET['direction'] ?? 'desc';
+
+    return is_string($direction) ? $direction : 'desc';
+}
+
+/**
  * Определяет номер текущей страницы
  *
  * @return int Номер страницы
@@ -182,6 +196,7 @@ function resolvePage(): int
  * @param PostController $postController Контроллер страницы статьи
  * @param SmartyView $view Сервис рендеринга шаблонов
  * @param string $sort Вариант сортировки статей
+ * @param string $direction Направление сортировки
  * @param int $page Номер страницы
  * @param string $method HTTP-метод запроса
  * @param string $path Путь запроса
@@ -194,6 +209,7 @@ function renderRoute(
     PostController $postController,
     SmartyView $view,
     string $sort,
+    string $direction,
     int $page,
     string $method,
     string $path,
@@ -210,7 +226,7 @@ function renderRoute(
 
     return match ($route['name']) {
         'home' => $homeController->index(),
-        'categories.show' => $categoryController->show($slug, $sort, $page),
+        'categories.show' => $categoryController->show($slug, $sort, $direction, $page),
         'posts.show' => $postController->show($slug),
 
         default => throw new LogicException('Для маршрута не задан обработчик'),
