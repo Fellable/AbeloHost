@@ -24,6 +24,9 @@
             "Infrastructure\\": "src/"
         }
     },
+    "scripts": {
+        "analyse": "phpstan analyse"
+    },
     "config": {
         "optimize-autoloader": true,
         "sort-packages": true
