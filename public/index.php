@@ -6,9 +6,12 @@ use App\Controllers\CategoryController;
 use App\Controllers\HomeController;
 use App\Controllers\PostController;
 use App\Database\Connection;
+use App\Enums\PostSort;
+use App\Enums\SortDirection;
 use App\Http\Router;
 use App\Repositories\CategoryRepository;
 use App\Repositories\PostRepository;
+use App\Services\CategoryService;
 use App\View\SmartyView;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
@@ -108,8 +111,10 @@ function createHomeController(PDO $connection, SmartyView $view): HomeController
 function createCategoryController(PDO $connection, SmartyView $view): CategoryController
 {
     return new CategoryController(
-        new CategoryRepository($connection),
-        new PostRepository($connection),
+        new CategoryService(
+            new CategoryRepository($connection),
+            new PostRepository($connection),
+        ),
         $view,
     );
 }
@@ -151,25 +156,29 @@ function resolveRequest(): array
 /**
  * Определяет выбранную сортировку статей
  *
- * @return string Запрошенная сортировка
+ * @return PostSort Поле сортировки
  */
-function resolveSort(): string
+function resolveSort(): PostSort
 {
-    $sort = $_GET['sort'] ?? 'date';
+    $sort = $_GET['sort'] ?? null;
 
-    return is_string($sort) ? $sort : 'date';
+    return is_string($sort)
+        ? PostSort::tryFrom($sort) ?? PostSort::Date
+        : PostSort::Date;
 }
 
 /**
  * Определяет направление сортировки статей
  *
- * @return string Запрошенное направление
+ * @return SortDirection Направление сортировки
  */
-function resolveDirection(): string
+function resolveDirection(): SortDirection
 {
-    $direction = $_GET['direction'] ?? 'desc';
+    $direction = $_GET['direction'] ?? null;
 
-    return is_string($direction) ? $direction : 'desc';
+    return is_string($direction)
+        ? SortDirection::tryFrom($direction) ?? SortDirection::Desc
+        : SortDirection::Desc;
 }
 
 /**
@@ -196,8 +205,8 @@ function resolvePage(): int
  * @param CategoryController $categoryController Контроллер страницы категории
  * @param PostController $postController Контроллер страницы статьи
  * @param SmartyView $view Сервис рендеринга шаблонов
- * @param string $sort Вариант сортировки статей
- * @param string $direction Направление сортировки
+ * @param PostSort $sort Поле сортировки
+ * @param SortDirection $direction Направление сортировки
  * @param int $page Номер страницы
  * @param string $method HTTP-метод запроса
  * @param string $path Путь запроса
@@ -209,8 +218,8 @@ function renderRoute(
     CategoryController $categoryController,
     PostController     $postController,
     SmartyView         $view,
-    string             $sort,
-    string             $direction,
+    PostSort           $sort,
+    SortDirection      $direction,
     int                $page,
     string             $method,
     string             $path,

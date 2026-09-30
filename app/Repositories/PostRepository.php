@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\Enums\PostSort;
+use App\Enums\SortDirection;
 use PDO;
 
 /**
@@ -11,16 +13,6 @@ use PDO;
  */
 final class PostRepository
 {
-    private const SORTING = [
-        'date' => 'posts.published_at',
-        'views' => 'posts.views',
-    ];
-
-    private const DIRECTIONS = [
-        'asc' => 'ASC',
-        'desc' => 'DESC',
-    ];
-
     /**
      * @param PDO $connection Подключение к базе данных
      */
@@ -28,28 +20,6 @@ final class PostRepository
         private readonly PDO $connection,
     )
     {
-    }
-
-    /**
-     * Возвращает допустимый вариант сортировки
-     *
-     * @param string $sort Запрошенная сортировка
-     * @return string Допустимая сортировка
-     */
-    public function normalizeSort(string $sort): string
-    {
-        return isset(self::SORTING[$sort]) ? $sort : 'date';
-    }
-
-    /**
-     * Возвращает допустимое направление сортировки
-     *
-     * @param string $direction Запрошенное направление
-     * @return string Допустимое направление
-     */
-    public function normalizeDirection(string $direction): string
-    {
-        return isset(self::DIRECTIONS[$direction]) ? $direction : 'desc';
     }
 
     /**
@@ -74,23 +44,25 @@ final class PostRepository
      * Возвращает статьи категории с учётом сортировки
      *
      * @param int $categoryId Идентификатор категории
-     * @param string $sort Вариант сортировки
-     * @param string $direction Направление сортировки
+     * @param PostSort $sort Поле сортировки
+     * @param SortDirection $direction Направление сортировки
      * @param int $limit Количество статей
      * @param int $offset Смещение выборки
      * @return array Список статей
      */
     public function findByCategoryId(
         int    $categoryId,
-        string $sort,
-        string $direction,
+        PostSort $sort,
+        SortDirection $direction,
         int    $limit,
         int    $offset,
     ): array
     {
-        $sort = $this->normalizeSort($sort);
-        $direction = $this->normalizeDirection($direction);
-        $orderBy = self::SORTING[$sort] . ' ' . self::DIRECTIONS[$direction];
+        $orderBy = match ($sort) {
+            PostSort::Date => 'posts.published_at',
+            PostSort::Views => 'posts.views',
+        };
+        $sqlDirection = strtoupper($direction->value);
         $statement = $this->connection->prepare(
             'SELECT
                 posts.id,
@@ -105,7 +77,7 @@ final class PostRepository
             INNER JOIN category_post ON category_post.post_id = posts.id
             INNER JOIN images ON images.id = posts.image_id
             WHERE category_post.category_id = :category_id
-            ORDER BY ' . $orderBy . ', posts.id ' . self::DIRECTIONS[$direction] . '
+            ORDER BY ' . $orderBy . ' ' . $sqlDirection . ', posts.id ' . $sqlDirection . '
             LIMIT :limit OFFSET :offset'
         );
         $statement->bindValue('category_id', $categoryId, PDO::PARAM_INT);
