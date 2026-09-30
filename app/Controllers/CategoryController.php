@@ -29,9 +29,10 @@ final class CategoryController
      * Отображает категорию и список её статей
      *
      * @param string $slug Slug категории
+     * @param string $sort Вариант сортировки статей
      * @return string HTML страницы категории
      */
-    public function show(string $slug): string
+    public function show(string $slug, string $sort = 'date'): string
     {
         $category = $this->categoryRepository->findBySlug($slug);
 
@@ -41,13 +42,15 @@ final class CategoryController
             return $this->view->render('errors/404.tpl');
         }
 
-        $posts = $this->postRepository->findByCategoryId($category['id']);
+        $sort = $this->postRepository->normalizeSort($sort);
+        $posts = $this->postRepository->findByCategoryId($category['id'], $sort);
 
         return $this->view->render(
             'category.tpl',
             [
                 'category' => $category,
                 'posts' => $posts,
+                'sort' => $sort,
             ],
         );
     }

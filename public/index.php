@@ -19,12 +19,14 @@ $connection = createConnection($rootDirectory);
 $homeController = createHomeController($connection, $view);
 $categoryController = createCategoryController($connection, $view);
 [$method, $path] = resolveRequest();
+$sort = resolveSort();
 
 $content = renderRoute(
     $router,
     $homeController,
     $categoryController,
     $view,
+    $sort,
     $method,
     $path,
 );
@@ -125,12 +127,25 @@ function resolveRequest(): array
 }
 
 /**
+ * Определяет выбранную сортировку статей
+ *
+ * @return string Запрошенная сортировка
+ */
+function resolveSort(): string
+{
+    $sort = $_GET['sort'] ?? 'date';
+
+    return is_string($sort) ? $sort : 'date';
+}
+
+/**
  * Выполняет обработчик найденного маршрута
  *
  * @param Router $router Маршрутизатор HTTP-запросов
  * @param HomeController $homeController Контроллер главной страницы
  * @param CategoryController $categoryController Контроллер страницы категории
  * @param SmartyView $view Сервис рендеринга шаблонов
+ * @param string $sort Вариант сортировки статей
  * @param string $method HTTP-метод запроса
  * @param string $path Путь запроса
  * @return string Содержимое HTTP-ответа
@@ -140,6 +155,7 @@ function renderRoute(
     HomeController $homeController,
     CategoryController $categoryController,
     SmartyView $view,
+    string $sort,
     string $method,
     string $path,
 ): string {
@@ -155,7 +171,7 @@ function renderRoute(
 
     return match ($route['name']) {
         'home' => $homeController->index(),
-        'categories.show' => $categoryController->show($slug),
+        'categories.show' => $categoryController->show($slug, $sort),
         'posts.show' => sprintf(
             'Статья: %s',
             htmlspecialchars($slug, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
