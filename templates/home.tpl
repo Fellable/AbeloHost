@@ -12,7 +12,9 @@
         <section class="category-section">
             <div class="category-section__header">
                 <div>
-                    <h2>{$category.name|escape}</h2>
+                    <h2>
+                        <a href="/categories/{$category.slug|escape:'url'}">{$category.name|escape}</a>
+                    </h2>
                     <p>{$category.description|escape}</p>
                 </div>
                 <a class="button-link" href="/categories/{$category.slug|escape:'url'}">Все статьи</a>
